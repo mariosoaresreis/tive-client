@@ -1,0 +1,39 @@
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: tive-repo
+  _SERVICE_NAME: tive-client
+  _TIVE_QUERY_BASE_URL: https://tive-query.example.com
+  _TIVE_QUERY_API_KEY_SECRET: TIVE_QUERY_API_KEY
+  _GOOGLE_MAPS_API_KEY_SECRET: GOOGLE_MAPS_API_KEY
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$COMMIT_SHA
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$COMMIT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --project=$PROJECT_ID
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$COMMIT_SHA
+      - --port=8080
+      - --set-env-vars=TIVE_QUERY_BASE_URL=${_TIVE_QUERY_BASE_URL}
+      - --set-secrets=TIVE_QUERY_API_KEY=${_TIVE_QUERY_API_KEY_SECRET}:latest,GOOGLE_MAPS_API_KEY=${_GOOGLE_MAPS_API_KEY_SECRET}:latest
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$COMMIT_SHA
+

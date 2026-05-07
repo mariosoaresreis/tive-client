@@ -1,0 +1,30 @@
+<section class="map-page">
+  <header class="toolbar">
+    <div>
+      <h1>Device Positions</h1>
+      <p>Data source: tive-query endpoints</p>
+    </div>
+    <p class="refresh" *ngIf="lastRefresh() as ts">Last refresh: {{ ts | date: 'medium' }}</p>
+  </header>
+
+  <p class="status loading" *ngIf="loading()">Loading devices...</p>
+  <p class="status error" *ngIf="error() as message">{{ message }}</p>
+
+  <google-map
+    *ngIf="isMapsReady()"
+    class="device-map"
+    height="70vh"
+    width="100%"
+    [center]="center()"
+    [zoom]="zoom()"
+    [options]="mapOptions"
+  >
+    <map-marker
+      *ngFor="let marker of markers(); trackBy: trackById"
+      [position]="{ lat: marker.latitude, lng: marker.longitude }"
+      [title]="marker.name"
+    />
+  </google-map>
+</section>
+
+
